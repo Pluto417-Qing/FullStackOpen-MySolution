@@ -10,7 +10,8 @@ function App() {
 
   const handleFilterKeyChange = (e) => {
     setFilterKey(e.target.value)  
-    setFilteredCountries(countries.filter(country => country.name.common.toLowerCase().includes(filterKey)))  
+    const newFilteredCountries = countries.filter(country => country.name.common.toLowerCase().includes(e.target.value.toLowerCase()))
+    setFilteredCountries(newFilteredCountries)  
   }
 
   useEffect(() => {
@@ -30,7 +31,7 @@ function App() {
       {
         filteredCountries.length > 10 ? 
           <p>Too many matches, specify another filter</p>:
-          filteredCountries.length != 1 ?  
+          filteredCountries.length !== 1 ?  
             <CountryList countries={filteredCountries} />
             : <Country country={filteredCountries[0]}/>
       }
