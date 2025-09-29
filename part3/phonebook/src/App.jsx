@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Filter from './components/Filter';
 import PersonForm from './components/PersonForm';
 import Persons from './components/Persons';
-import axios from 'axios'
+import phonebookService from './services/phonebook.js';
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -17,29 +17,57 @@ const App = () => {
   const filterKey = useInput('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then(res => res.data)
+    phonebookService.getPersons()
       .then(data => {
+        console.log('get persons', data)
         setPersons(data)
       })
   },[])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if(persons.some(person => person.name === name.value)){
-      alert(`${name.value} is already added to phonebook`)
+    const person = persons.find(person => person.name == name.value)
+    if (person) {
+      const confirmed = window.confirm(`${person.name} is already added to phonebook, replace the old number with a new one?`)
+      if(!confirmed)return
+
+      const newPerson = {...person, number: number.value}
+      phonebookService
+      .updatePerson(newPerson.id, newPerson)
+      .then(data => {
+        const newPersons = persons.filter(person => person.id != newPerson.id)
+        newPersons.push(data)
+        setPersons(newPersons)
+      })
       name.setValue("")
+      number.setValue("")
       return 
     }
-    setPersons(persons.concat([{name: name.value, number: number.value}]))
+    phonebookService.addPerson({ name: name.value, number: number.value })
+      .then(newPerson => {
+        setPersons(prev => prev.concat(newPerson))
+      })
     name.setValue("")
     number.setValue("")
   }
 
-  const filteredPersons = filterKey 
-    ? persons.filter(person => 
-        person.name.toLowerCase().includes(filterKey.value.toLowerCase())
+  const handleDelete = (person) => {
+    const confirmed = window.confirm(`Delete ${person.name}?`)
+    if (!confirmed) return
+
+    phonebookService.deletePerson(person.id)
+      .then(() => {
+        setPersons(prev => prev.filter(p => p.id !== person.id))
+      })
+      .catch(error => {
+        console.error('Failed to delete person', error)
+      })
+  }
+
+  const filterValue = filterKey.value.trim().toLowerCase()
+  const filteredPersons = filterValue
+    ? persons.filter(person =>
+        person.name.toLowerCase().includes(filterValue)
       )
     : persons
 
@@ -50,7 +78,7 @@ const App = () => {
       <h2>add a new</h2>
       <PersonForm handleSubmit={handleSubmit} name={name} number={number}/>
       <h2>Numbers</h2>
-      <Persons persons={filteredPersons}/>
+      <Persons persons={filteredPersons} onDelete={handleDelete}/>
     </div>
   )
 }
