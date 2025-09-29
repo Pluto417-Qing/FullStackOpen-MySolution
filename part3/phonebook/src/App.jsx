@@ -91,7 +91,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-  <Notification message={message} />
+      <Notification message={message} />
       <Filter filterKey={filterKey}/>
       <h2>add a new</h2>
       <PersonForm handleSubmit={handleSubmit} name={name} number={number}/>
