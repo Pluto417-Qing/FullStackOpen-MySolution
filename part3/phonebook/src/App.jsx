@@ -3,9 +3,11 @@ import Filter from './components/Filter';
 import PersonForm from './components/PersonForm';
 import Persons from './components/Persons';
 import phonebookService from './services/phonebook.js';
+import Notification from './components/Notification.jsx';
 
 const App = () => {
   const [persons, setPersons] = useState([])
+  const [message, setMessage] = useState("")
   const useInput = (initialValue) => {
     const [value, setValue] = useState(initialValue)
     const onChange = (e) => setValue(e.target.value)
@@ -22,6 +24,10 @@ const App = () => {
         console.log('get persons', data)
         setPersons(data)
       })
+      .catch(error => {
+        setMessage(error.response?.data?.error || error.message || 'Failed to fetch persons')
+        setTimeout(() => setMessage(""), 5000)
+      })
   },[])
 
   const handleSubmit = (e) => {
@@ -35,9 +41,11 @@ const App = () => {
       phonebookService
       .updatePerson(newPerson.id, newPerson)
       .then(data => {
-        const newPersons = persons.filter(person => person.id != newPerson.id)
-        newPersons.push(data)
-        setPersons(newPersons)
+        setPersons(prev => prev.map(p => (p.id === newPerson.id ? data : p)))
+      })
+      .catch(error => {
+        setMessage(error.response?.data?.error || error.message || 'Failed to update person')
+        setTimeout(() => setMessage(""), 5000)
       })
       name.setValue("")
       number.setValue("")
@@ -46,6 +54,14 @@ const App = () => {
     phonebookService.addPerson({ name: name.value, number: number.value })
       .then(newPerson => {
         setPersons(prev => prev.concat(newPerson))
+        setMessage(`Added ${name.value}`)
+        setTimeout(() => {
+          setMessage("")
+        }, 5000)
+      })
+      .catch(error => {
+        setMessage(error.response?.data?.error || error.message || 'Failed to add person')
+        setTimeout(() => setMessage(""), 5000)
       })
     name.setValue("")
     number.setValue("")
@@ -60,7 +76,8 @@ const App = () => {
         setPersons(prev => prev.filter(p => p.id !== person.id))
       })
       .catch(error => {
-        console.error('Failed to delete person', error)
+        setMessage(error.response?.data?.error || error.message || 'Failed to delete person')
+        setTimeout(() => setMessage(""), 5000)
       })
   }
 
@@ -74,6 +91,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+  <Notification message={message} />
       <Filter filterKey={filterKey}/>
       <h2>add a new</h2>
       <PersonForm handleSubmit={handleSubmit} name={name} number={number}/>

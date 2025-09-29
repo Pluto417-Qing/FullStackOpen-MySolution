@@ -12,7 +12,8 @@ const addPerson = async (newPerson) => {
 }
 
 const updatePerson = async (id, newPerson) => {
-    return axios.put(`${baseUrl}/${id}`, newPerson)
+        return axios
+            .put(`${baseUrl}/${id}`, newPerson)
             .then(res => res.data)
 }
 
