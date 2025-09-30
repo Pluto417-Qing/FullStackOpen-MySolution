@@ -1,10 +1,12 @@
 const { error } = require('console')
 const express = require('express')
-const path = require('path')
+const morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
-app.use(express.static('public'))
+morgan.token('body', function (req, res) { return JSON.stringify(req.body) })
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+
 
 let persons = [
     {
@@ -68,7 +70,6 @@ app.delete("/api/persons/:id", (request, response) => {
 
 app.post("/api/persons", (request, response) => {
     const body = request.body
-    console.log(body)
 
     if(!body.name || !body.number){
         return response.status(400).json({
